@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Our API</title>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%;
+            --radius: 0.5rem;
+        }
+
+        .dark {
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%;
+            --popover-foreground: 210 40% 98%;
+            --primary: 210 40% 98%;
+            --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+
+        * {
+            border-color: hsl(var(--border));
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background-color: hsl(var(--background));
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: hsl(var(--primary));
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .container {
+            background-color: hsl(var(--card));
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .route-group {
+            margin-bottom: 20px;
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .route-group-header {
+            background-color: hsl(var(--secondary));
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .route-group-content {
+            display: none;
+            padding: 15px;
+        }
+
+        .route {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: hsl(var(--muted));
+            border-radius: var(--radius);
+        }
+
+        .method {
+            font-weight: bold;
+            color: hsl(var(--primary));
+            background-color: hsl(var(--secondary));
+            padding: 2px 6px;
+            border-radius: var(--radius);
+            margin-right: 5px;
+        }
+
+        .path {
+            color: hsl(var(--accent-foreground));
+        }
+
+        .description {
+            margin-top: 5px;
+            color: hsl(var(--muted-foreground));
+        }
+
+        .api-test {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: hsl(var(--accent));
+            border-radius: var(--radius);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Our API</h1>
+        
+        <div class="route-group">
+            <div class="route-group-header">User Routes</div>
+            <div class="route-group-content">
+                <div class="route">
+                    <span class="method">POST</span>
+                    <span class="path">/api/users/register</span>
+                    <div class="description">Register a new user</div>
+                </div>
+                <div class="route">
+                    <span class="method">POST</span>
+                    <span class="path">/api/users/changepassword</span>
+                    <div class="description">Change user password (requires authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">POST</span>
+                    <span class="path">/api/users/login</span>
+                    <div class="description">User login</div>
+                </div>
+                <div class="route">
+                    <span class="method">POST</span>
+                    <span class="path">/api/users/logout</span>
+                    <div class="description">User logout (requires authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/users/verify</span>
+                    <div class="description">Verify user session</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/users/:id</span>
+                    <div class="description">Get user by ID (requires authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/users/user/role</span>
+                    <div class="description">Get user role (requires authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">PUT</span>
+                    <span class="path">/api/users/:id</span>
+                    <div class="description">Update user (requires authentication)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="route-group">
+            <div class="route-group-header">Product Routes</div>
+            <div class="route-group-content">
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/products</span>
+                    <div class="description">Get all products</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/products/search</span>
+                    <div class="description">Search products</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/products/:id</span>
+                    <div class="description">Get product by ID</div>
+                </div>
+                <div class="route">
+                    <span class="method">POST</span>
+                    <span class="path">/api/products</span>
+                    <div class="description">Create a new product (requires seller authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">PUT</span>
+                    <span class="path">/api/products/:id</span>
+                    <div class="description">Update a product (requires seller authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">DELETE</span>
+                    <span class="path">/api/products/:id</span>
+                    <div class="description">Delete a product (requires seller authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/products/seller/listings</span>
+                    <div class="description">Get product listings by user (requires authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/products/:id/listings</span>
+                    <div class="description">Get product listings</div>
+                </div>
+                <div class="route">
+                    <span class="method">POST</span>
+                    <span class="path">/api/products/seller</span>
+                    <div class="description">Create seller products with listings (requires seller authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">DELETE</span>
+                    <span class="path">/api/products/seller/:id</span>
+                    <div class="description">Remove product from seller listing (requires seller authentication)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="route-group">
+            <div class="route-group-header">Category Routes</div>
+            <div class="route-group-content">
+                <div class="route">
+                    <span class="method">POST</span>
+                    <span class="path">/api/categories</span>
+                    <div class="description">Create a new category (requires seller authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/categories</span>
+                    <div class="description">Get all categories (requires seller authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">GET</span>
+                    <span class="path">/api/categories/:id</span>
+                    <div class="description">Get category by ID (requires seller authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">PUT</span>
+                    <span class="path">/api/categories/:id</span>
+                    <div class="description">Update a category (requires seller authentication)</div>
+                </div>
+                <div class="route">
+                    <span class="method">DELETE</span>
+                    <span class="path">/api/categories/:id</span>
+                    <div class="description">Delete a category (requires seller authentication)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-test">
+            <h2>API Test</h2>
+            <p>This is a test message for the /api route. If you can see this, the API is working correctly!</p>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.route-group-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+    </script>
+</body>
+</html>
