@@ -1,0 +1,114 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  email           String           @unique
+  password        String
+  role            Role
+  phone           String?
+  address         Address?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  sessions        Session[]
+  sellerProducts  SellerProducts?
+  purchaseHistory PurchaseHistory?
+}
+
+type Address {
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String
+}
+
+model Product {
+  id           String           @id @default(auto()) @map("_id") @db.ObjectId
+  name         String           @unique
+  description  String
+  categoryId   String           @db.ObjectId
+  category     Category         @relation(fields: [categoryId], references: [id])
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  listings     ProductListing[]
+  ProductOrder ProductOrder[]
+}
+
+model Category {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model SellerProducts {
+  id       String           @id @default(auto()) @map("_id") @db.ObjectId
+  seller   User             @relation(fields: [sellerId], references: [id])
+  sellerId String           @unique @db.ObjectId
+  listings ProductListing[]
+}
+
+model ProductListing {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  product          Product        @relation(fields: [productId], references: [id])
+  productId        String         @db.ObjectId
+  sellerProducts   SellerProducts @relation(fields: [sellerProductsId], references: [id])
+  sellerProductsId String         @db.ObjectId
+  stock            Int
+  price            Float
+  listedDate       DateTime       @default(now())
+
+  @@unique([productId, sellerProductsId])
+}
+
+model PurchaseHistory {
+  id      String         @id @default(auto()) @map("_id") @db.ObjectId
+  buyer   User           @relation(fields: [buyerId], references: [id])
+  buyerId String         @unique @db.ObjectId
+  orders  ProductOrder[]
+}
+
+model ProductOrder {
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  productListing    Product         @relation(fields: [productListingId], references: [id])
+  productListingId  String          @db.ObjectId
+  purchaseHistory   PurchaseHistory @relation(fields: [purchaseHistoryId], references: [id])
+  purchaseHistoryId String          @db.ObjectId
+  quantity          Int
+  purchaseDate      DateTime        @default(now())
+  status            OrderStatus
+
+  @@unique([productListingId, purchaseHistoryId])
+}
+
+enum Role {
+  BUYER
+  SELLER
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
