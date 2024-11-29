@@ -125,7 +125,13 @@ export const updateUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const userId = req.params.id
+    const userId = req.user?.id
+
+    if (userId == null) {
+      res.status(401).json({ message: 'Unauthorized' })
+      return
+    }
+
     const userData: UpdateUserInput = req.body
     const updatedUser = await userService.updateUser(userId, userData)
     res.status(200).json(updatedUser)

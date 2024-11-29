@@ -12,6 +12,6 @@ router.get('/verify', userController.verifySession)
 
 router.get('/:id', authenticateJWT, userController.getUser)
 router.get('/user/role', authenticateJWT, userController.getUserRole)
-router.put('/:id', authenticateJWT, userController.updateUser)
+router.put('/', authenticateJWT, userController.updateUser)
 
 export default router
