@@ -182,3 +182,24 @@ export const getUserRole = async (req: Request, res: Response): Promise<void> =>
     }
   }
 }
+
+export const getMe = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (req.user == null || req.user.id == null) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' })
+      return
+    }
+
+    const userId = req.user?.id
+    const user = await userService.getUserData(userId)
+    res.status(200).json(user)
+  } catch (error) {
+    if (error instanceof DatabaseError) {
+      res.status(error.statusCode).json({ error: error.message })
+    } else {
+      res
+        .status(500)
+        .json({ error: 'An unexpected error occurred while fetching user' })
+    }
+  }
+}

@@ -5,7 +5,8 @@ export type Address = Prisma.AddressGetPayload<{}>
 export { Role }
 
 export interface CreateUserInput {
-  name: string
+  firstName: string
+  lastName: string
   email: string
   password: string
   role: Role
@@ -14,7 +15,8 @@ export interface CreateUserInput {
 }
 
 export interface UpdateUserInput {
-  name?: string
+  firstName?: string
+  lastName?: string
   email?: string
   password?: string
   role?: Role

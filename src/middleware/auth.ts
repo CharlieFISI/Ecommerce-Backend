@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { Session } from '../models/Session'
+import { Session, SessionType } from '../models/Session'
 import { Role } from '../types/user'
-import { UserType } from '../models/User'
+import { User, UserType } from '../models/User'
 
 const JWT_SECRET: string = process.env.JWT_SECRET
 
@@ -89,4 +89,41 @@ export const login = async (user: UserType): Promise<string> => {
 
 export const logout = async (token: string): Promise<void> => {
   await Session.delete({ where: { token } })
+}
+
+export const refreshToken = async (token: string, userId: string): Promise<SessionType> => {
+  try {
+    const user = await User.findUnique({
+      where: { id: userId }
+    })
+
+    if (user == null) {
+      throw new Error('User not found')
+    }
+
+    const newToken = generateToken(user)
+
+    const session = await Session.findUnique({
+      where: { token },
+      include: { user: true }
+    })
+
+    if (session == null) {
+      throw new Error('Invalid session')
+    }
+
+    const updatedSession = await Session.update({
+      where: { id: session.id },
+      data: {
+        token: newToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        updatedAt: new Date()
+      },
+      include: { user: true }
+    })
+
+    return updatedSession
+  } catch (error) {
+    throw new Error('Failed to refresh token')
+  }
 }

@@ -6,7 +6,7 @@ import {
   AuthorizationError
 } from '../utils/errors'
 import bcrypt from 'bcryptjs'
-import { login, logout } from '../middleware/auth'
+import { login, logout, refreshToken } from '../middleware/auth'
 import { Session, SessionType } from '../models/Session'
 
 export const createUser = async (data: CreateUserInput): Promise<UserType> => {
@@ -25,7 +25,11 @@ export const createUser = async (data: CreateUserInput): Promise<UserType> => {
   }
 }
 
-export const changePassword = async (userId: string, currentPassword: string, newPassword: string): Promise<boolean> => {
+export const changePassword = async (
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<boolean> => {
   try {
     const user = await User.findUnique({
       where: { id: userId },
@@ -36,7 +40,10 @@ export const changePassword = async (userId: string, currentPassword: string, ne
       throw new NotFoundError('User not found')
     }
 
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    )
     if (!isPasswordValid) {
       throw new AuthorizationError('Current password is incorrect')
     }
@@ -67,7 +74,8 @@ export const loginUser = async (
       select: {
         id: true,
         email: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         role: true,
         password: true,
         phone: true,
@@ -111,8 +119,7 @@ export const verifySession = async (
 ): Promise<{ session: SessionType }> => {
   try {
     const session = await Session.findUnique({
-      where: { token },
-      include: { user: true }
+      where: { token }
     })
 
     if (session == null) {
@@ -124,9 +131,9 @@ export const verifySession = async (
       throw new AuthorizationError('Session has expired')
     }
 
-    const { user, ...sessionData } = session
+    const refreshedSession = await refreshToken(token, session.userId)
 
-    return { session: sessionData }
+    return { session: refreshedSession }
   } catch (error) {
     if (error instanceof AuthorizationError) {
       throw error
@@ -178,6 +185,36 @@ export const getUserRole = async (userId: string): Promise<string> => {
     }
 
     return user.role
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error
+    }
+    throw new DatabaseError('Failed to fetch user role')
+  }
+}
+
+export const getUserData = async (
+  userId: string
+): Promise<
+Pick<UserType, 'firstName' | 'lastName' | 'email' | 'phone' | 'address'>
+> => {
+  try {
+    const user = await User.findUnique({
+      where: { id: userId },
+      select: {
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        address: true
+      }
+    })
+
+    if (user === null) {
+      throw new NotFoundError('User not found')
+    }
+
+    return user
   } catch (error) {
     if (error instanceof NotFoundError) {
       throw error

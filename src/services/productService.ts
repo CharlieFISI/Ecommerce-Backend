@@ -242,7 +242,7 @@ export const getProductListingsByUser = async (
     }
 
     if (user.sellerProducts == null) {
-      throw new NotFoundError('Seller has no products')
+      return []
     }
 
     const productListings = await ProductListing.findMany({
