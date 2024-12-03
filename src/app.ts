@@ -4,9 +4,16 @@ import routes from './routes'
 import path from 'path'
 
 const app = express()
-
-app.use(cors())
 app.use(express.json())
+
+const corsOptions = {
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+  optionsSuccessStatus: 200
+}
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
+
 app.use(express.static(path.join(__dirname, '../public')))
 
 app.get('/api', (req, res) => {
