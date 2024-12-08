@@ -101,8 +101,6 @@ export const refreshToken = async (token: string, userId: string): Promise<Sessi
       throw new Error('User not found')
     }
 
-    const newToken = generateToken(user)
-
     const session = await Session.findUnique({
       where: { token },
       include: { user: true }
@@ -115,7 +113,6 @@ export const refreshToken = async (token: string, userId: string): Promise<Sessi
     const updatedSession = await Session.update({
       where: { id: session.id },
       data: {
-        token: newToken,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         updatedAt: new Date()
       },
