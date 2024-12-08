@@ -7,12 +7,15 @@ const app = express()
 app.use(express.json())
 
 const allowedOrigins = [
-  process.env.LOCAL_DASHBOARD_FRONTEND_URL,
+  process.env.DASHBOARD_FRONTEND_URL,
   process.env.LOCAL_MOBILE_FRONTEND_URL
 ].filter(Boolean)
 
 const corsOptions: CorsOptions = {
-  origin: function (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
+  origin: function (
+    origin: string | undefined,
+    callback: (error: Error | null, allow?: boolean) => void
+  ) {
     if (origin === undefined) {
       callback(null, true)
     } else if (allowedOrigins.includes(origin)) {
@@ -31,7 +34,9 @@ app.options('*', cors(corsOptions))
 app.use(express.static(path.join(__dirname, '../public')))
 
 app.get('/api', (req, res) => {
-  res.json({ message: 'Welcome to the API! This is a test message for the /api route.' })
+  res.json({
+    message: 'Welcome to the API! This is a test message for the /api route.'
+  })
 })
 
 app.use('/api', routes)
