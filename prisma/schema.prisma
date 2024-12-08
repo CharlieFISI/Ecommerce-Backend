@@ -47,6 +47,7 @@ model Product {
   description  String
   categoryId   String           @db.ObjectId
   category     Category         @relation(fields: [categoryId], references: [id])
+  imageUrl     String?
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   listings     ProductListing[]
