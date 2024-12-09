@@ -1,5 +1,5 @@
 import express from 'express'
-import cors, { CorsOptions } from 'cors'
+import cors from 'cors'
 import routes from './routes'
 import path from 'path'
 
