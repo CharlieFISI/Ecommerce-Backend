@@ -4,6 +4,7 @@ import productRoutes from './productRoutes'
 import categoryRoutes from './categoryRoutes'
 import favoriteProductsRoutes from './favoriteProductsRoutes'
 import shoppingCartRoutes from './shoppingCartRoutes'
+import purchaseOrderRoutes from './purchaseOrderRoutes'
 
 const router = express.Router()
 
@@ -12,5 +13,6 @@ router.use('/products', productRoutes)
 router.use('/categories', categoryRoutes)
 router.use('/favorites', favoriteProductsRoutes)
 router.use('/cart', shoppingCartRoutes)
+router.use('/orders', purchaseOrderRoutes)
 
 export default router

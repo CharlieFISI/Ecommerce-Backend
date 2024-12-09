@@ -156,8 +156,10 @@ enum Role {
   SELLER
 }
 
+// Prisma schema definition
 enum OrderStatus {
   PROCESSING
+  CONFIRMED // Estado que indica que el stock ha sido actualizado
   DELIVERED
   CANCELED
 }
