@@ -32,7 +32,7 @@ model User {
   updatedAt        DateTime          @updatedAt
   sessions         Session[]
   sellerProducts   SellerProducts?
-  purchaseHistory  PurchaseHistory?
+  purchaseHistory  PurchaseHistory[] // Cambia a lista
   cart             Cart?
   favoriteProducts FavoriteProduct[]
 
@@ -92,7 +92,7 @@ model ProductListing {
 model PurchaseHistory {
   id      String         @id @default(auto()) @map("_id") @db.ObjectId
   buyer   User           @relation(fields: [buyerId], references: [id])
-  buyerId String         @unique @db.ObjectId
+  buyerId String         @db.ObjectId
   orders  ProductOrder[]
 
   @@map("purchase_histories")
@@ -104,11 +104,11 @@ model ProductOrder {
   productListingId  String          @db.ObjectId
   purchaseHistory   PurchaseHistory @relation(fields: [purchaseHistoryId], references: [id])
   purchaseHistoryId String          @db.ObjectId
+  purchaseId        String?         @db.ObjectId
   quantity          Int
   purchaseDate      DateTime        @default(now())
   status            OrderStatus
 
-  @@unique([productListingId, purchaseHistoryId])
   @@map("product_orders")
 }
 
