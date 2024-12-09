@@ -95,6 +95,7 @@ model PurchaseHistory {
   buyerId String         @db.ObjectId
   orders  ProductOrder[]
 
+  @@unique([buyerId])
   @@map("purchase_histories")
 }
 
