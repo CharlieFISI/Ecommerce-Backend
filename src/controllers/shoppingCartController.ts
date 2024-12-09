@@ -1,49 +1,28 @@
 import { Request, Response } from 'express'
-import * as cartService from './../services/shoppingCartService'
+import * as shoppingCartService from './../services/shoppingCartService'
 import { NotFoundError, ValidationError, DatabaseError } from '../utils/errors'
 
-export const getCartByUser = async (req: Request, res: Response): Promise<void> => {
+// Add a product to the cart
+export const addToCart = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
-
-    if (userId == null) {
-      res.status(401).json({ message: 'User not authenticated' })
-      return
-    }
-
-    const cart = await cartService.getCartByUser(userId)
-    res.status(200).json(cart)
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({ message: error.message })
-    } else if (error instanceof DatabaseError) {
-      res.status(500).json({ message: error.message })
-    } else {
-      res.status(500).json({ message: 'An unexpected error occurred' })
-    }
-  }
-}
-
-export const addProductToCart = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const userId = req.user?.id
-
-    if (userId == null) {
-      res.status(401).json({ message: 'User not authenticated' })
-      return
-    }
-
     const {
       productId,
+      sellerId,
       quantity
     } = req.body
 
-    if (productId == null || quantity == null) {
-      res.status(400).json({ message: 'Product ID and quantity are required' })
+    if (userId == null) {
+      res.status(401).json({ message: 'User not authenticated' })
       return
     }
 
-    const cartItem = await cartService.addProductToCart(userId, productId, quantity)
+    if (productId == null || sellerId == null || quantity == null) {
+      res.status(400).json({ message: 'Product ID, seller ID, and quantity are required' })
+      return
+    }
+
+    const cartItem = await shoppingCartService.addToCart(userId, productId, sellerId, quantity)
     res.status(201).json(cartItem)
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof ValidationError) {
@@ -56,7 +35,8 @@ export const addProductToCart = async (req: Request, res: Response): Promise<voi
   }
 }
 
-export const updateCartItemQuantity = async (req: Request, res: Response): Promise<void> => {
+// View the user's cart
+export const viewCart = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
 
@@ -65,17 +45,40 @@ export const updateCartItemQuantity = async (req: Request, res: Response): Promi
       return
     }
 
+    const cartItems = await shoppingCartService.viewCart(userId)
+    res.status(200).json(cartItems)
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ message: error.message })
+    } else if (error instanceof DatabaseError) {
+      res.status(500).json({ message: error.message })
+    } else {
+      res.status(500).json({ message: 'An unexpected error occurred' })
+    }
+  }
+}
+
+// Update the quantity of a cart item
+export const updateCartItem = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id
     const {
       productId,
+      sellerId,
       quantity
     } = req.body
 
-    if (productId == null || quantity == null) {
-      res.status(400).json({ message: 'Product ID and quantity are required' })
+    if (userId == null) {
+      res.status(401).json({ message: 'User not authenticated' })
       return
     }
 
-    const updatedCartItem = await cartService.updateCartItemQuantity(userId, productId, quantity)
+    if (productId == null || sellerId == null || quantity == null) {
+      res.status(400).json({ message: 'Product ID, seller ID, and quantity are required' })
+      return
+    }
+
+    const updatedCartItem = await shoppingCartService.updateCartItem(productId, userId, sellerId, quantity)
     res.status(200).json(updatedCartItem)
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof ValidationError) {
@@ -88,23 +91,26 @@ export const updateCartItemQuantity = async (req: Request, res: Response): Promi
   }
 }
 
-export const removeProductFromCart = async (req: Request, res: Response): Promise<void> => {
+// Delete a cart item
+export const deleteCartItem = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
+    const {
+      productId,
+      sellerId
+    } = req.body
 
     if (userId == null) {
       res.status(401).json({ message: 'User not authenticated' })
       return
     }
 
-    const { productId } = req.body
-
-    if (productId == null) {
-      res.status(400).json({ message: 'Product ID is required' })
+    if (productId == null || sellerId == null) {
+      res.status(400).json({ message: 'Product ID and seller ID are required' })
       return
     }
 
-    await cartService.removeProductFromCart(userId, productId)
+    await shoppingCartService.deleteCartItem(productId, userId, sellerId)
     res.status(204).end()
   } catch (error) {
     if (error instanceof NotFoundError) {

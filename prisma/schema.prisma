@@ -84,33 +84,36 @@ model ProductListing {
   stock            Int
   price            Float
   listedDate       DateTime       @default(now())
+  CartItem         CartItem[]
+  ProductOrder     ProductOrder[]
 
   @@unique([productId, sellerProductsId])
   @@map("product_listings")
 }
 
+model ProductOrder {
+  id                String           @id @default(auto()) @map("_id") @db.ObjectId
+  productListingId  String           @db.ObjectId
+  productListing    ProductListing   @relation(fields: [productListingId], references: [id])
+  purchaseHistoryId String?          @db.ObjectId
+  purchaseHistory   PurchaseHistory? @relation(fields: [purchaseHistoryId], references: [id])
+  purchaseId        String?          @db.ObjectId
+  quantity          Int
+  purchaseDate      DateTime         @default(now())
+  status            OrderStatus
+  Product           Product?         @relation(fields: [productId], references: [id])
+  productId         String?          @db.ObjectId
+
+  @@map("product_orders")
+}
+
 model PurchaseHistory {
   id      String         @id @default(auto()) @map("_id") @db.ObjectId
   buyer   User           @relation(fields: [buyerId], references: [id])
-  buyerId String         @db.ObjectId
+  buyerId String         @unique @db.ObjectId
   orders  ProductOrder[]
 
-  @@unique([buyerId])
   @@map("purchase_histories")
-}
-
-model ProductOrder {
-  id                String          @id @default(auto()) @map("_id") @db.ObjectId
-  productListing    Product         @relation(fields: [productListingId], references: [id])
-  productListingId  String          @db.ObjectId
-  purchaseHistory   PurchaseHistory @relation(fields: [purchaseHistoryId], references: [id])
-  purchaseHistoryId String          @db.ObjectId
-  purchaseId        String?         @db.ObjectId
-  quantity          Int
-  purchaseDate      DateTime        @default(now())
-  status            OrderStatus
-
-  @@map("product_orders")
 }
 
 model Cart {
@@ -124,12 +127,14 @@ model Cart {
 }
 
 model CartItem {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  cartId    String  @db.ObjectId
-  cart      Cart    @relation(fields: [cartId], references: [id])
-  productId String  @db.ObjectId
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  cartId           String         @db.ObjectId
+  cart             Cart           @relation(fields: [cartId], references: [id])
+  productListingId String         @db.ObjectId
+  productListing   ProductListing @relation(fields: [productListingId], references: [id])
+  quantity         Int
+  Product          Product?       @relation(fields: [productId], references: [id])
+  productId        String?        @db.ObjectId
 
   @@map("cart_items")
 }
@@ -152,11 +157,9 @@ enum Role {
 }
 
 enum OrderStatus {
-  PENDING
   PROCESSING
-  SHIPPED
   DELIVERED
-  CANCELLED
+  CANCELED
 }
 
 type Address {
