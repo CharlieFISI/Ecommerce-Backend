@@ -1,6 +1,6 @@
-import { PrismaClient, FavoriteProduct as FavoriteProductModel } from '@prisma/client';
+import { PrismaClient, FavoriteProduct as PrismaFavoriteProduct } from '@prisma/client'
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
-export const FavoriteProduct = prisma.favoriteProduct; // Delegate
-export type FavoriteProductType = FavoriteProductModel; // Modelo
+export const FavoriteProduct = prisma.favoriteProduct
+export type FavoriteProductType = PrismaFavoriteProduct

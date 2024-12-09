@@ -4,9 +4,6 @@ import { Product } from '../models/Product'
 import { User } from '../models/User'
 import { NotFoundError, DatabaseError, ValidationError } from '../utils/errors'
 
-/**
- * Get the user's shopping cart
- */
 export const getCartByUser = async (userId: string): Promise<CartType> => {
   try {
     const user = await User.findUnique({ where: { id: userId } })
@@ -32,9 +29,6 @@ export const getCartByUser = async (userId: string): Promise<CartType> => {
   }
 }
 
-/**
- * Add a product to the user's cart
- */
 export const addProductToCart = async (
   userId: string,
   productId: string,
@@ -83,9 +77,6 @@ export const addProductToCart = async (
   }
 }
 
-/**
- * Update product quantity in the user's cart
- */
 export const updateCartItemQuantity = async (
   userId: string,
   productId: string,
@@ -126,9 +117,6 @@ export const updateCartItemQuantity = async (
   }
 }
 
-/**
- * Remove a product from the user's cart
- */
 export const removeProductFromCart = async (
   userId: string,
   productId: string

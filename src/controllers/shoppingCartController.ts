@@ -2,14 +2,11 @@ import { Request, Response } from 'express'
 import * as cartService from './../services/shoppingCartService'
 import { NotFoundError, ValidationError, DatabaseError } from '../utils/errors'
 
-/**
- * Get the shopping cart of a user
- */
 export const getCartByUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
 
-    if (!userId) {
+    if (userId == null) {
       res.status(401).json({ message: 'User not authenticated' })
       return
     }
@@ -27,14 +24,11 @@ export const getCartByUser = async (req: Request, res: Response): Promise<void> 
   }
 }
 
-/**
- * Add a product to the shopping cart
- */
 export const addProductToCart = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
 
-    if (!userId) {
+    if (userId == null) {
       res.status(401).json({ message: 'User not authenticated' })
       return
     }
@@ -44,7 +38,7 @@ export const addProductToCart = async (req: Request, res: Response): Promise<voi
       quantity
     } = req.body
 
-    if (!productId || quantity == null) {
+    if (productId == null || quantity == null) {
       res.status(400).json({ message: 'Product ID and quantity are required' })
       return
     }
@@ -62,14 +56,11 @@ export const addProductToCart = async (req: Request, res: Response): Promise<voi
   }
 }
 
-/**
- * Update the quantity of a product in the cart
- */
 export const updateCartItemQuantity = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
 
-    if (!userId) {
+    if (userId == null) {
       res.status(401).json({ message: 'User not authenticated' })
       return
     }
@@ -79,7 +70,7 @@ export const updateCartItemQuantity = async (req: Request, res: Response): Promi
       quantity
     } = req.body
 
-    if (!productId || quantity == null) {
+    if (productId == null || quantity == null) {
       res.status(400).json({ message: 'Product ID and quantity are required' })
       return
     }
@@ -97,21 +88,18 @@ export const updateCartItemQuantity = async (req: Request, res: Response): Promi
   }
 }
 
-/**
- * Remove a product from the shopping cart
- */
 export const removeProductFromCart = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
 
-    if (!userId) {
+    if (userId == null) {
       res.status(401).json({ message: 'User not authenticated' })
       return
     }
 
     const { productId } = req.body
 
-    if (!productId) {
+    if (productId == null) {
       res.status(400).json({ message: 'Product ID is required' })
       return
     }
