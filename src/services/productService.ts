@@ -204,7 +204,9 @@ export const deleteCategory = async (id: string): Promise<void> => {
 
 export const getProductListings = async (
   productId: string
-): Promise<Array<Omit<ProductListingType, 'sellerProductsId'> & { sellerName: string }>> => {
+): Promise<
+Array<Omit<ProductListingType, 'sellerProductsId'> & { sellerName: string }>
+> => {
   try {
     const product = await Product.findUnique({
       where: { id: productId },
@@ -215,6 +217,7 @@ export const getProductListings = async (
               include: {
                 seller: {
                   select: {
+                    id: true,
                     firstName: true,
                     lastName: true
                   }
@@ -230,13 +233,15 @@ export const getProductListings = async (
       throw new NotFoundError('Product not found')
     }
 
-    return product.listings.map(listing => ({
+    return product.listings.map((listing) => ({
       id: listing.id,
       productId: listing.productId,
       stock: listing.stock,
       price: listing.price,
       listedDate: listing.listedDate,
-      sellerName: `${listing.sellerProducts.seller.firstName}${listing.sellerProducts.seller.lastName}`.trim()
+      sellerName:
+        `${listing.sellerProducts.seller.firstName}${listing.sellerProducts.seller.lastName}`.trim(),
+      sellerId: listing.sellerProducts.sellerId
     }))
   } catch (error) {
     if (error instanceof NotFoundError) {
