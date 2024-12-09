@@ -1,149 +1,206 @@
-import { Cart, CartType } from '../models/Cart'
-import { CartItem, CartItemType } from '../models/CartItem'
-import { Product } from '../models/Product'
 import { User } from '../models/User'
-import { NotFoundError, DatabaseError, ValidationError } from '../utils/errors'
+import { DatabaseError, NotFoundError, ValidationError } from '../utils/errors'
+import { ProductListing } from '../models/ProductListing'
+import { Cart } from '../models/Cart'
+import { CartItem, CartItemType } from '../models/CartItem'
 
-export const getCartByUser = async (userId: string): Promise<CartType> => {
-  try {
-    const user = await User.findUnique({ where: { id: userId } })
-    if (user == null) {
-      throw new NotFoundError('User not found')
+// Helper to fetch a product listing by productId and sellerId
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const getProductListing = async (productId: string, sellerId: string) => {
+  const listing = await ProductListing.findFirst({
+    where: {
+      productId,
+      sellerProducts: { sellerId }
     }
+  })
 
-    const cart = await Cart.findUnique({
-      where: { userId },
-      include: { items: { include: { product: true } } }
+  if (listing == null) {
+    throw new NotFoundError('Product listing not found')
+  }
+
+  return listing
+}
+
+// Add product to the cart
+export const addToCart = async (userId: string, productId: string, sellerId: string, quantity: number): Promise<CartItemType> => {
+  const user = await User.findUnique({ where: { id: userId } })
+  if (user == null) {
+    throw new NotFoundError('User not found')
+  }
+  try {
+    const listing = await getProductListing(productId, sellerId)
+
+    let cart = await Cart.findFirst({
+      where: { userId }
     })
 
     if (cart == null) {
-      throw new NotFoundError('Cart not found for the user')
-    }
-
-    return cart
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      throw error
-    }
-    throw new DatabaseError('Failed to fetch the cart')
-  }
-}
-
-export const addProductToCart = async (
-  userId: string,
-  productId: string,
-  quantity: number
-): Promise<CartItemType> => {
-  try {
-    const user = await User.findUnique({ where: { id: userId } })
-    if (user == null) {
-      throw new NotFoundError('User not found')
-    }
-
-    const product = await Product.findUnique({ where: { id: productId } })
-    if (product == null) {
-      throw new NotFoundError('Product not found')
-    }
-
-    if (quantity <= 0) {
-      throw new ValidationError('Quantity must be greater than 0')
-    }
-
-    const cart = await Cart.upsert({
-      where: { userId },
-      create: { userId },
-      update: {}
-    })
-
-    const existingCartItem = await CartItem.findFirst({
-      where: { cartId: cart.id, productId }
-    })
-
-    if (existingCartItem != null) {
-      return await CartItem.update({
-        where: { id: existingCartItem.id },
-        data: { quantity: existingCartItem.quantity + quantity }
+      cart = await Cart.create({
+        data: { userId }
       })
     }
 
-    return await CartItem.create({
-      data: { cartId: cart.id, productId, quantity }
+    let existingCartItem = await CartItem.findFirst({
+      where: {
+        cartId: cart.id,
+        productListingId: listing.id
+      }
     })
-  } catch (error) {
-    if (error instanceof NotFoundError || error instanceof ValidationError) {
-      throw error
+
+    if (existingCartItem == null) {
+      existingCartItem = await CartItem.create({
+        data: {
+          cartId: cart.id,
+          productListingId: listing.id,
+          quantity
+        }
+      })
+      existingCartItem.productId = productId
+      return existingCartItem
     }
+    existingCartItem.quantity += quantity
+    await CartItem.update({
+      where: { id: existingCartItem.id },
+      data: { quantity: existingCartItem.quantity }
+    })
+    existingCartItem.productId = productId
+    return existingCartItem
+  } catch (error) {
     throw new DatabaseError('Failed to add product to cart')
   }
 }
 
-export const updateCartItemQuantity = async (
-  userId: string,
-  productId: string,
-  quantity: number
-): Promise<CartItemType> => {
+// View cart
+export const viewCart = async (userId: string): Promise<CartItemType[]> => {
+  const user = await User.findUnique({ where: { id: userId } })
+  if (user == null) {
+    throw new NotFoundError('User not found')
+  }
   try {
-    const [user] = await Promise.all([User.findUnique({ where: { id: userId } })])
-    if (user == null) {
-      throw new NotFoundError('User not found')
-    }
-
-    const cart = await Cart.findUnique({ where: { userId } })
-    if (cart == null) {
-      throw new NotFoundError('Cart not found')
-    }
-
-    const cartItem = await CartItem.findFirst({
-      where: { cartId: cart.id, productId }
+    const cart = await Cart.findUnique({
+      where: { userId },
+      include: { items: { include: { productListing: true } } }
     })
-    if (cartItem == null) {
-      throw new NotFoundError('Product not found in cart')
+    console.log({ cart })
+
+    if (cart == null || cart.items.length === 0) {
+      console.log({ message: 'No cart found' })
+      return []
     }
 
-    if (quantity <= 0) {
-      await CartItem.delete({ where: { id: cartItem.id } })
-      return cartItem
-    }
-
-    return await CartItem.update({
-      where: { id: cartItem.id },
-      data: { quantity }
-    })
+    return cart.items
   } catch (error) {
-    if (error instanceof NotFoundError || error instanceof ValidationError) {
-      throw error
-    }
-    throw new DatabaseError('Failed to update product quantity in cart')
+    throw new DatabaseError('Failed to fetch cart items')
   }
 }
 
-export const removeProductFromCart = async (
-  userId: string,
-  productId: string
-): Promise<void> => {
+// Update quantity of a cart item with stock validation
+export const updateCartItem = async (
+  productId: string,
+  buyerId: string,
+  sellerId: string,
+  quantity: number
+): Promise<CartItemType> => {
+  // Validate the quantity
+  if (quantity <= 0) {
+    throw new ValidationError('Quantity must be greater than zero')
+  }
+
+  // Find the buyer
+  const user = await User.findUnique({ where: { id: buyerId } })
+  if (user == null) {
+    throw new NotFoundError('User not found')
+  }
+
+  // Find the cart item based on the productId, buyerId, and sellerId
+  const cartItem = await CartItem.findFirst({
+    where: {
+      productListing: {
+        productId,
+        sellerProducts: { sellerId }
+      },
+      cart: {
+        user: {
+          id: buyerId
+        }
+      }
+    },
+    include: {
+      productListing: true // Include product listing details
+    }
+  })
+
+  if (cartItem == null) {
+    throw new NotFoundError('Cart item not found')
+  }
+
+  const { productListing } = cartItem
+  if (productListing == null) {
+    throw new NotFoundError('Associated product listing not found')
+  }
+
+  // Validate stock
+  if (quantity > productListing.stock) {
+    throw new ValidationError(
+      `Cannot update quantity to ${quantity}. Only ${productListing.stock} items are available in stock.`
+    )
+  }
+
   try {
-    const user = await User.findUnique({ where: { id: userId } })
-    if (user == null) {
-      throw new NotFoundError('User not found')
-    }
-
-    const cart = await Cart.findUnique({ where: { userId } })
-    if (cart == null) {
-      throw new NotFoundError('Cart not found')
-    }
-
-    const cartItem = await CartItem.findFirst({
-      where: { cartId: cart.id, productId }
+    // Update the cart item quantity
+    const item = await CartItem.update({
+      where: { id: cartItem.id },
+      data: { quantity }
     })
-    if (cartItem == null) {
-      throw new NotFoundError('Product not found in cart')
-    }
-
-    await CartItem.delete({ where: { id: cartItem.id } })
+    item.productId = productId
+    return item
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      throw error
+    throw new DatabaseError('Failed to update cart item quantity')
+  }
+}
+
+// Delete a cart item
+export const deleteCartItem = async (
+  productId: string,
+  buyerId: string,
+  sellerId: string
+): Promise<void> => {
+  // Find the buyer
+  const user = await User.findUnique({ where: { id: buyerId } })
+  if (user == null) {
+    throw new NotFoundError('User not found')
+  }
+
+  // Find the cart item based on the productId, buyerId, and sellerId
+  const cartItem = await CartItem.findFirst({
+    where: {
+      productListing: {
+        productId,
+        sellerProducts: { sellerId }
+      },
+      cart: {
+        user: {
+          id: buyerId
+        }
+      }
+    },
+    include: {
+      productListing: true // Include product listing details
     }
-    throw new DatabaseError('Failed to remove product from cart')
+  })
+
+  if (cartItem == null) {
+    throw new NotFoundError('Cart item not found')
+  }
+
+  try {
+    // Delete the cart item from the database
+    await CartItem.delete({
+      where: {
+        id: cartItem.id
+      }
+    })
+  } catch (error) {
+    throw new DatabaseError('Failed to delete cart item')
   }
 }
