@@ -449,12 +449,17 @@ export const createPurchaseHistory = async (
 
 export const getPurchaseHistoryByBuyerId = async (
   buyerId: string
-): Promise<PurchaseHistoryType | null> => {
+): Promise<PurchaseHistoryType> => {
   try {
     const purchaseHistory = await PurchaseHistory.findUnique({
       where: { buyerId },
       include: { orders: true }
     })
+
+    if (purchaseHistory == null) {
+      throw new NotFoundError('Purchase History not found')
+    }
+
     return purchaseHistory
   } catch (error) {
     throw new DatabaseError('Failed to fetch purchase history')
