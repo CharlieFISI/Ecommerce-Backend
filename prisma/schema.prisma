@@ -15,30 +15,28 @@ model Session {
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("sessions")
 }
 
 model User {
-  id              String           @id @default(auto()) @map("_id") @db.ObjectId
-  firstName       String
-  lastName        String
-  email           String           @unique
-  password        String
-  role            Role
-  phone           String?
-  address         Address?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  sessions        Session[]
-  sellerProducts  SellerProducts?
-  purchaseHistory PurchaseHistory?
-}
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  firstName        String
+  lastName         String
+  email            String           @unique
+  password         String
+  role             Role
+  phone            String?
+  address          Address?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  sessions         Session[]
+  sellerProducts   SellerProducts?
+  purchaseHistory  PurchaseHistory?
+  cart             Cart?
+  favoriteProducts FavoriteProduct[]
 
-type Address {
-  street     String
-  city       String
-  state      String
-  postalCode String
-  country    String
+  @@map("users")
 }
 
 model Product {
@@ -52,6 +50,10 @@ model Product {
   updatedAt    DateTime         @updatedAt
   listings     ProductListing[]
   ProductOrder ProductOrder[]
+  cartItems    CartItem[]
+  favoriteOf   FavoriteProduct[]
+
+  @@map("products")
 }
 
 model Category {
@@ -60,6 +62,8 @@ model Category {
   products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@map("categories")
 }
 
 model SellerProducts {
@@ -67,6 +71,8 @@ model SellerProducts {
   seller   User             @relation(fields: [sellerId], references: [id])
   sellerId String           @unique @db.ObjectId
   listings ProductListing[]
+
+  @@map("seller_products")
 }
 
 model ProductListing {
@@ -80,6 +86,7 @@ model ProductListing {
   listedDate       DateTime       @default(now())
 
   @@unique([productId, sellerProductsId])
+  @@map("product_listings")
 }
 
 model PurchaseHistory {
@@ -87,6 +94,8 @@ model PurchaseHistory {
   buyer   User           @relation(fields: [buyerId], references: [id])
   buyerId String         @unique @db.ObjectId
   orders  ProductOrder[]
+
+  @@map("purchase_histories")
 }
 
 model ProductOrder {
@@ -100,6 +109,40 @@ model ProductOrder {
   status            OrderStatus
 
   @@unique([productListingId, purchaseHistoryId])
+  @@map("product_orders")
+}
+
+model Cart {
+  id      String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId  String     @unique @db.ObjectId
+  user    User       @relation(fields: [userId], references: [id])
+  items   CartItem[]
+  updatedAt DateTime @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  cartId    String  @db.ObjectId
+  cart      Cart    @relation(fields: [cartId], references: [id])
+  productId String  @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  @@map("cart_items")
+}
+
+model FavoriteProduct {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String  @db.ObjectId
+  user      User    @relation(fields: [userId], references: [id])
+  productId String  @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id])
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("favorite_products")
 }
 
 enum Role {
@@ -113,4 +156,12 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+type Address {
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String
 }
