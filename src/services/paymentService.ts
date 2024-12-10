@@ -2,6 +2,8 @@ import Stripe from 'stripe'
 import stripe, { STRIPE_PUBLISHABLE_KEY } from '../config/stripe'
 import { Product } from '../models/Product'
 import { CartItemWithProductListing } from '../types/cart'
+import { CartItem } from '../models/CartItem'
+import { Cart } from '../models/Cart'
 
 export const getPublishableKey = (): string => {
   return STRIPE_PUBLISHABLE_KEY
@@ -31,21 +33,31 @@ const getProductDetails = async (productId: string): Promise<{ name: string, ima
   }
 }
 
-export const createCheckoutSession = async (items: CartItemWithProductListing[], successUrl: string, cancelUrl: string): Promise<Stripe.Checkout.Session> => {
+export const createCheckoutSession = async (
+  items: CartItemWithProductListing[],
+  successUrl: string,
+  cancelUrl: string,
+  userId: string
+): Promise<Stripe.Checkout.Session> => {
   try {
     const lineItems = await Promise.all(items.map(async (item) => {
       const productDetails = await getProductDetails(item.productListing.productId)
-      return {
+      const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
         price_data: {
           currency: 'usd',
           product_data: {
-            name: productDetails.name,
-            images: [productDetails.imageUrl]
+            name: productDetails.name
           },
           unit_amount: Math.round(item.productListing.price * 100)
         },
         quantity: item.quantity
       }
+
+      if (productDetails.imageUrl !== null && productDetails.imageUrl.trim() !== '' && lineItem.price_data !== undefined && lineItem.price_data.product_data !== undefined) {
+        lineItem.price_data.product_data.images = [productDetails.imageUrl]
+      }
+
+      return lineItem
     }))
 
     const session = await stripe.checkout.sessions.create({
@@ -55,6 +67,22 @@ export const createCheckoutSession = async (items: CartItemWithProductListing[],
       success_url: successUrl,
       cancel_url: cancelUrl
     })
+
+    const userCart = await Cart.findUnique({
+      where: { userId },
+      include: { items: true }
+    })
+
+    if (userCart == null) {
+      throw new Error('User cart not found')
+    }
+
+    await CartItem.deleteMany({
+      where: {
+        cartId: userCart.id
+      }
+    })
+
     return session
   } catch (error) {
     console.error('Error creating checkout session:', error)

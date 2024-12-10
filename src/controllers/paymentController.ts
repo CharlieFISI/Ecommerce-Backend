@@ -19,7 +19,14 @@ export const createPaymentIntent = async (req: Request, res: Response): Promise<
 export const createCheckoutSession = async (req: Request, res: Response): Promise<void> => {
   try {
     const { items, successUrl, cancelUrl } = req.body
-    const session = await stripeService.createCheckoutSession(items, successUrl, cancelUrl)
+    const userId = req.user?.id
+
+    if (userId == null) {
+      res.status(401).json({ error: 'User not authenticated' })
+      return
+    }
+
+    const session = await stripeService.createCheckoutSession(items, successUrl, cancelUrl, userId)
     res.json({ sessionId: session.id })
   } catch (error) {
     res.status(500).json({ error: 'Error creating checkout session' })
