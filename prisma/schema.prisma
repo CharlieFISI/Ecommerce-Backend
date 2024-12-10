@@ -32,7 +32,7 @@ model User {
   updatedAt        DateTime          @updatedAt
   sessions         Session[]
   sellerProducts   SellerProducts?
-  purchaseHistory  PurchaseHistory[] // Cambia a lista
+  purchaseHistory  PurchaseHistory[]
   cart             Cart?
   favoriteProducts FavoriteProduct[]
 
@@ -156,10 +156,9 @@ enum Role {
   SELLER
 }
 
-// Prisma schema definition
 enum OrderStatus {
   PROCESSING
-  CONFIRMED // Estado que indica que el stock ha sido actualizado
+  CONFIRMED 
   DELIVERED
   CANCELED
 }

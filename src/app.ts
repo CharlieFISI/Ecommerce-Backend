@@ -31,7 +31,7 @@ app.use(express.json())
 // }
 
 const corsOptions: cors.CorsOptions = {
-  origin: '*', // Esto permite cualquier origen
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

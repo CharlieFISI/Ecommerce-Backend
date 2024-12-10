@@ -14,5 +14,6 @@ router.use('/categories', categoryRoutes)
 router.use('/favorites', favoriteProductsRoutes)
 router.use('/cart', shoppingCartRoutes)
 router.use('/orders', purchaseOrderRoutes)
+router.use('/payments', purchaseOrderRoutes)
 
 export default router

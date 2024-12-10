@@ -1,12 +1,13 @@
 import { User } from '../models/User'
 import { DatabaseError, NotFoundError, ValidationError } from '../utils/errors'
-import { ProductListing } from '../models/ProductListing'
+import { ProductListing, ProductListingType } from '../models/ProductListing'
 import { Cart } from '../models/Cart'
 import { CartItem, CartItemType } from '../models/CartItem'
 
-// Helper to fetch a product listing by productId and sellerId
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const getProductListing = async (productId: string, sellerId: string) => {
+const getProductListing = async (
+  productId: string,
+  sellerId: string
+): Promise<ProductListingType> => {
   const listing = await ProductListing.findFirst({
     where: {
       productId,
@@ -21,7 +22,6 @@ const getProductListing = async (productId: string, sellerId: string) => {
   return listing
 }
 
-// Add product to the cart
 export const addToCart = async (userId: string, productId: string, sellerId: string, quantity: number): Promise<CartItemType> => {
   const user = await User.findUnique({ where: { id: userId } })
   if (user == null) {
@@ -70,7 +70,6 @@ export const addToCart = async (userId: string, productId: string, sellerId: str
   }
 }
 
-// View cart
 export const viewCart = async (userId: string): Promise<CartItemType[]> => {
   const user = await User.findUnique({ where: { id: userId } })
   if (user == null) {
@@ -81,7 +80,6 @@ export const viewCart = async (userId: string): Promise<CartItemType[]> => {
       where: { userId },
       include: { items: { include: { productListing: true } } }
     })
-    console.log({ cart })
 
     if (cart == null || cart.items.length === 0) {
       console.log({ message: 'No cart found' })
@@ -94,25 +92,21 @@ export const viewCart = async (userId: string): Promise<CartItemType[]> => {
   }
 }
 
-// Update quantity of a cart item with stock validation
 export const updateCartItem = async (
   productId: string,
   buyerId: string,
   sellerId: string,
   quantity: number
 ): Promise<CartItemType> => {
-  // Validate the quantity
   if (quantity <= 0) {
     throw new ValidationError('Quantity must be greater than zero')
   }
 
-  // Find the buyer
   const user = await User.findUnique({ where: { id: buyerId } })
   if (user == null) {
     throw new NotFoundError('User not found')
   }
 
-  // Find the cart item based on the productId, buyerId, and sellerId
   const cartItem = await CartItem.findFirst({
     where: {
       productListing: {
@@ -126,7 +120,7 @@ export const updateCartItem = async (
       }
     },
     include: {
-      productListing: true // Include product listing details
+      productListing: true
     }
   })
 
@@ -139,15 +133,13 @@ export const updateCartItem = async (
     throw new NotFoundError('Associated product listing not found')
   }
 
-  // Validate stock
   if (quantity > productListing.stock) {
     throw new ValidationError(
-      `Cannot update quantity to ${quantity}. Only ${productListing.stock} items are available in stock.`
+      `Cannot update quantity to ${quantity}. Only ${productListing.stock as number} items are available in stock.`
     )
   }
 
   try {
-    // Update the cart item quantity
     const item = await CartItem.update({
       where: { id: cartItem.id },
       data: { quantity }
@@ -159,19 +151,16 @@ export const updateCartItem = async (
   }
 }
 
-// Delete a cart item
 export const deleteCartItem = async (
   productId: string,
   buyerId: string,
   sellerId: string
 ): Promise<void> => {
-  // Find the buyer
   const user = await User.findUnique({ where: { id: buyerId } })
   if (user == null) {
     throw new NotFoundError('User not found')
   }
 
-  // Find the cart item based on the productId, buyerId, and sellerId
   const cartItem = await CartItem.findFirst({
     where: {
       productListing: {
@@ -185,7 +174,7 @@ export const deleteCartItem = async (
       }
     },
     include: {
-      productListing: true // Include product listing details
+      productListing: true
     }
   })
 
@@ -194,7 +183,6 @@ export const deleteCartItem = async (
   }
 
   try {
-    // Delete the cart item from the database
     await CartItem.delete({
       where: {
         id: cartItem.id

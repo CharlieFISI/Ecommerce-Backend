@@ -2,7 +2,6 @@ import { Request, Response } from 'express'
 import * as shoppingCartService from './../services/shoppingCartService'
 import { NotFoundError, ValidationError, DatabaseError } from '../utils/errors'
 
-// Add a product to the cart
 export const addToCart = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
@@ -35,7 +34,6 @@ export const addToCart = async (req: Request, res: Response): Promise<void> => {
   }
 }
 
-// View the user's cart
 export const viewCart = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
@@ -58,7 +56,6 @@ export const viewCart = async (req: Request, res: Response): Promise<void> => {
   }
 }
 
-// Update the quantity of a cart item
 export const updateCartItem = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id
@@ -91,7 +88,6 @@ export const updateCartItem = async (req: Request, res: Response): Promise<void>
   }
 }
 
-// Delete a cart item
 export const deleteCartItem = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id

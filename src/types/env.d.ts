@@ -11,6 +11,8 @@ declare global {
       LOCAL_MOBILE_FRONTEND_URL: string
       OTHER_MOBILE_FRONTEND_URL: string
       MOBILE_FRONTEND_URL: string
+      STRIPE_PUBLISHABLE_KEY: string
+      STRIPE_SECRET_KEY: string
       MONGODB_URI: string
       PORT: string
     }

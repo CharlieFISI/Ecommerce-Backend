@@ -8,7 +8,6 @@ import { ProductListing } from '../models/ProductListing'
 import { OrderStatus } from '@prisma/client'
 
 export const createOrder = async (userId: string): Promise<ProductOrderType[]> => {
-  // Retrieve the user's cart
   const cart = await Cart.findUnique({
     where: { userId },
     include: { items: { include: { productListing: true } } }
@@ -18,7 +17,6 @@ export const createOrder = async (userId: string): Promise<ProductOrderType[]> =
     throw new ValidationError('Cart is empty or does not exist')
   }
 
-  // Retrieve the user
   const user = await User.findUnique({ where: { id: userId } })
   if (user == null) {
     throw new NotFoundError('User not found')
@@ -27,7 +25,6 @@ export const createOrder = async (userId: string): Promise<ProductOrderType[]> =
   const orders: ProductOrderType[] = []
 
   try {
-    // Create a purchase history entry if it does not exist
     let purchaseHistory = await PurchaseHistory.findFirst({
       where: { buyerId: userId }
     })
@@ -37,13 +34,12 @@ export const createOrder = async (userId: string): Promise<ProductOrderType[]> =
         data: {
           buyerId: userId,
           orders: {
-            create: [] // We'll populate this with real data later
+            create: []
           }
         }
       })
     }
 
-    // Create ProductOrder records from cart items first
     const createdOrders = await Promise.all(
       cart.items.map(async (cartItem) => {
         const {
@@ -54,7 +50,6 @@ export const createOrder = async (userId: string): Promise<ProductOrderType[]> =
           throw new NotFoundError('Associated product listing not found')
         }
 
-        // Create the order
         const order = await ProductOrder.create({
           data: {
             productListingId: productListing.id,
@@ -69,7 +64,6 @@ export const createOrder = async (userId: string): Promise<ProductOrderType[]> =
       })
     )
 
-    // Associate the created orders with the purchase history
     await PurchaseHistory.update({
       where: { id: purchaseHistory.id },
       data: {
@@ -79,7 +73,6 @@ export const createOrder = async (userId: string): Promise<ProductOrderType[]> =
       }
     })
 
-    // Clear the cart
     await CartItem.deleteMany({
       where: { cartId: cart.id }
     })
@@ -90,7 +83,6 @@ export const createOrder = async (userId: string): Promise<ProductOrderType[]> =
   }
 }
 
-// Update order status
 export const updateOrderStatus = async (
   orderId: string,
   sellerId: string,
@@ -139,7 +131,6 @@ export const updateOrderStatus = async (
   }
 }
 
-// Cancel order by user
 export const cancelOrder = async (orderId: string, userId: string): Promise<void> => {
   const order = await ProductOrder.findUnique({
     where: { id: orderId },
@@ -168,9 +159,7 @@ export const cancelOrder = async (orderId: string, userId: string): Promise<void
   }
 }
 
-// Cancel all pending orders by user
 export const cancelAllPendingOrders = async (userId: string): Promise<void> => {
-  // Buscar todas las órdenes con estado 'PROCESSING' que pertenecen al usuario
   const pendingOrders = await ProductOrder.findMany({
     where: {
       status: OrderStatus.PROCESSING,
@@ -188,7 +177,6 @@ export const cancelAllPendingOrders = async (userId: string): Promise<void> => {
   }
 
   try {
-    // Actualizar todas las órdenes a estado 'CANCELED'
     await Promise.all(
       pendingOrders.map(async order =>
         await ProductOrder.update({
@@ -202,7 +190,6 @@ export const cancelAllPendingOrders = async (userId: string): Promise<void> => {
   }
 }
 
-// View orders by user
 export const getUserOrders = async (userId: string): Promise<ProductOrderType[]> => {
   const orders = await ProductOrder.findMany({
     where: {

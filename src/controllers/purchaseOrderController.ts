@@ -108,7 +108,6 @@ export const cancelAllPendingOrders = async (req: Request, res: Response): Promi
       return
     }
 
-    // Llamada al servicio para cancelar todas las órdenes pendientes del usuario
     await purchaseOrderService.cancelAllPendingOrders(userId)
     res.status(204).end()
   } catch (error) {
